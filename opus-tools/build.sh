@@ -20,7 +20,7 @@ case $ARCH in
 esac
 
 mkdir -p "$BUILD_DIR"
-cd $GITHUB_WORKSPACE/opus-tools
+cd $GITHUB_WORKSPACE/$PKG_NAME
 
 get_sources() {
   SOURCES_URL=http://downloads.xiph.org/releases/
@@ -44,7 +44,7 @@ get_sources_github() {
 }
 
 # build libogg
-get_sources libogg
+get_sources_github 'xiph/ogg'
 ( cd libogg-*/
   autoreconf -fi && \
   ./configure --prefix=$BUILD_DIR \
@@ -53,7 +53,7 @@ get_sources libogg
   make -j$(nproc) install )
 
 # build FLAC
-get_sources flac
+get_sources_github 'xiph/flac'
 ( cd flac-*/
   autoreconf -fi && \
   ./configure --prefix=$BUILD_DIR \
@@ -61,6 +61,8 @@ get_sources flac
     --disable-dependency-tracking \
     --disable-debug \
     --disable-oggtest \
+    --disable-programs \
+    --disable-examples \
     --disable-cpplibs \
     --disable-doxygen-docs \
     --with-ogg="$BUILD_DIR" && \
@@ -112,11 +114,11 @@ git clone --depth 1 https://github.com/xiph/opus-tools.git
   ./autogen.sh && \
   sed -e 's/@LDFLAGS@/@LDFLAGS@ -all-static/' -i Makefile.in
   LDFLAGS="-Wl,-static -static -static-libgcc" \
-  ./configure --prefix=$BUILD_DIR \
+  ./configure --prefix=/usr \
     --disable-dependency-tracking \
     --disable-maintainer-mode
-  make -j$(nproc) install )
+  make -j$(nproc) install-strip DESTDIR=$GITHUB_WORKSPACE/AppDir || exit 1 )
 
-( cd $BUILD_DIR/bin ; $STRIP opus* ; tar -cJvf $GITHUB_WORKSPACE/opus-tools-libopus$OPUS_VERSION-$PLATFORM.tar.xz opus* )
+tar -C $GITHUB_WORKSPACE/AppDir/usr/bin -cJvf $GITHUB_WORKSPACE/$PKG_NAME-libopus$OPUS_VERSION-$PLATFORM.tar.xz opus*
 
 ccache --show-stats
