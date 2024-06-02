@@ -14,7 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          arch: [x86_64, x86, aarch64, armhf]
+          # arch: [x86_64, x86, aarch64, armhf]
+          arch: [x86_64]
           os: [ubuntu-latest]
           branch: [latest-stable]
     steps:
@@ -25,9 +26,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-opus-tools-${{ matrix.branch }}-${{ matrix.arch }}-${{ github.sha }}
+          key: ccache-${{ github.workflow }}-${{ matrix.branch }}-${{ matrix.arch }}-${{ github.sha }}
           restore-keys: |
-            ccache-opus-tools-${{ matrix.branch }}-${{ matrix.arch }}-
+            ccache-${{ github.workflow }}-${{ matrix.branch }}-${{ matrix.arch }}-
 
       - name: Set up Alpine Linux for ${{ matrix.arch }}
         uses: jirutka/setup-alpine@v1
@@ -53,11 +54,11 @@ jobs:
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: opus-tools-${{ matrix.arch }}
+          name: ${{ github.workflow }}-${{ matrix.arch }}
           path: ./**/opus-tools*.tar.*
 
   release:
-    # if: false
+    if: false
     needs: [build]
     permissions:
       contents: write
@@ -75,13 +76,20 @@ jobs:
           echo "DATE=$(gh api repos/$REPO/commits/$SHA --jq '.commit.committer.date' | date -f - +%Y%m%d%H%M)" >> $GITHUB_ENV
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v2
+        uses: ncipollo/release-action@v1
         with:
-          fail_on_unmatched_files: true
+          allowUpdates: true
           prerelease: false
-          tag_name: latest
+          tag: latest
           name: ${{ env.DATE }}
-          body: |
-            
-          files: |
-            ./**/opus-tools*.tar.*
+          artifacts: './**/opus-tools*.tar.*'
+
+      # - name: Upload release assets
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     fail_on_unmatched_files: true
+      #     prerelease: false
+      #     tag_name: latest
+      #     name: ${{ env.DATE }}
+      #     files: |
+      #       ./**/opus-tools*.tar.*
