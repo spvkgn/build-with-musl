@@ -61,6 +61,8 @@ get_sources flac
     --disable-dependency-tracking \
     --disable-debug \
     --disable-oggtest \
+    --disable-programs \
+    --disable-examples \
     --disable-cpplibs \
     --disable-doxygen-docs \
     --with-ogg="$BUILD_DIR" && \
