@@ -1,7 +1,6 @@
 #!/bin/bash
 set -eo pipefail
 
-STRIP=llvm-strip
 # export CFLAGS="-O3 -fno-strict-aliasing"
 export CCACHE_DIR="$GITHUB_WORKSPACE/.ccache"
 export DESTDIR=$GITHUB_WORKSPACE/out
@@ -14,21 +13,20 @@ case $ARCH in
   *)       PLATFORM=$ARCH ;;
 esac
 
-cd $GITHUB_WORKSPACE/exhale
+cd "$GITHUB_WORKSPACE/$PKG_NAME"
 
 git clone --depth 1 https://gitlab.com/ecodis/exhale.git && \
-mkdir -p exhale/_build && \
+mkdir -p "$PKG_NAME/_build" && \
 
-cmake -S exhale -B exhale/_build \
+cmake -S "$PKG_NAME" -B "$PKG_NAME/_build" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   -DCMAKE_EXE_LINKER_FLAGS="-static-libgcc -static-libstdc++ -static" && \
-cmake --build exhale/_build --target install/strip -- -j$(nproc) || exit 1
+cmake --build "$PKG_NAME/_build" --target install/strip -- -j$(nproc) || exit 1
 
-( cd $GITHUB_WORKSPACE/out/usr/bin && tar -cJvf $GITHUB_WORKSPACE/exhale-$PLATFORM.tar.xz exhale )
+( cd $GITHUB_WORKSPACE/out/usr/bin && tar -cJvf $GITHUB_WORKSPACE/$PKG_NAME-$PLATFORM.tar.xz exhale )
 
 ccache --show-stats
 
-# make -j$(nproc) -C exhale/_build install DESTDIR=$GITHUB_WORKSPACE/out || exit 1
   # -DCMAKE_CXX_COMPILER=clang \
