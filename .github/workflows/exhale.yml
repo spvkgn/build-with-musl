@@ -14,8 +14,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          arch: [x86_64, x86, aarch64, armhf]
-          # arch: [x86_64]
+          # arch: [x86_64, x86, aarch64, armhf]
+          arch: [x86_64]
           os: [ubuntu-latest]
           branch: [latest-stable]
     steps:
@@ -56,7 +56,7 @@ jobs:
           path: ./**/${{ github.workflow }}*.tar.*
 
   release:
-    # if: false
+    if: false
     needs: [build]
     permissions:
       contents: write
