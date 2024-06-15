@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
           # arch: [x86_64, x86, aarch64, armhf]
-          arch: [x86_64]
+          arch: [x86_64, x86]
           os: [ubuntu-latest]
           branch: [latest-stable]
     steps:
@@ -45,6 +45,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
           PKG_NAME: ${{ github.workflow }}
+          GH_TOKEN: ${{ github.token }}
         shell: alpine.sh {0}
         run: |
           bash -x $PKG_NAME/build.sh
@@ -57,7 +58,7 @@ jobs:
           path: ./**/${{ github.workflow }}*.tar.*
 
   release:
-    if: false
+    # if: false
     needs: [build]
     permissions:
       contents: write

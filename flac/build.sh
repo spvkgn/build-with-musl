@@ -3,6 +3,9 @@ set -eo pipefail
 
 BUILD_DIR=$GITHUB_WORKSPACE/build
 
+# export CC="ccache gcc"
+# export LD="ccache ld"
+# export AR="ccache ar"
 export CC="ccache clang"
 export LD="ccache ld.lld"
 export AR="ccache llvm-ar"
@@ -22,21 +25,15 @@ esac
 mkdir -p "$BUILD_DIR"
 cd $GITHUB_WORKSPACE/$PKG_NAME
 
-get_sources() {
-  SOURCES_URL=http://downloads.xiph.org/releases/
-  NAME=$1
-  case $NAME in
-    *"ogg"*)  SOURCES_URL+="ogg" ;;
-    *"flac"*) SOURCES_URL+="flac" ;;
-  esac
-  echo "Download $NAME sources"
-  wget -qO- $SOURCES_URL |\
-    grep -Po "href=\"\K$NAME-(\d+\.)+\d+.*\.tar\.(gz|xz)(?=\")" | sort -V | tail -1 |\
-    xargs -I{} wget -qO- $SOURCES_URL/{} | bsdtar -x
+get_sources_github() {
+  REPO=$1
+  wget -qO- --header="Authorization: token $GH_TOKEN" "https://api.github.com/repos/$REPO/releases/latest" |\
+    jq -r '.assets[] | select(.name | match("tar.(gz|xz)")) | .browser_download_url' |\
+    xargs wget -qO- | bsdtar -x
 }
 
 # build libogg
-get_sources libogg
+get_sources_github 'xiph/ogg'
 ( cd libogg-*/
   autoreconf -fi && \
   ./configure \
@@ -46,7 +43,7 @@ get_sources libogg
   make -j$(nproc) install || exit 1 )
 
 # build FLAC
-get_sources $PKG_NAME
+get_sources_github 'xiph/flac'
 ( cd $PKG_NAME-*/
   autoreconf -fi && \
   sed -e 's/@LDFLAGS@/@LDFLAGS@ -all-static/' -i Makefile.in
@@ -60,7 +57,7 @@ get_sources $PKG_NAME
     --disable-examples \
     --disable-cpplibs \
     --disable-doxygen-docs \
-    --with-ogg="$BUILD_DIR" && \
+    --with-ogg=$BUILD_DIR && \
   make -j$(nproc) install-strip DESTDIR=$GITHUB_WORKSPACE/AppDir || exit 1 )
 
 PKG_VERSION=$($GITHUB_WORKSPACE/AppDir/usr/bin/$PKG_NAME -v | awk '{print $2}')
