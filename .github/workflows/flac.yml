@@ -44,18 +44,17 @@ jobs:
         id: build
         env:
           ARCH: ${{ matrix.arch }}
-          BRANCH: ${{ matrix.branch }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ${{ github.workflow }}
         shell: alpine.sh {0}
         run: |
-          bash -x flac/build.sh
+          bash -x $PKG_NAME/build.sh
 
       - name: Upload artifacts
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.workflow }}-${{ matrix.arch }}
-          path: ./**/flac*.tar.*
+          path: ./**/${{ github.workflow }}*.tar.*
 
   release:
     if: false
@@ -82,7 +81,7 @@ jobs:
           prerelease: false
           tag: latest
           name: ${{ env.DATE }}
-          artifacts: './**/flac*.tar.*'
+          artifacts: './**/${{ github.workflow }}*.tar.*'
 
       # - name: Upload release assets
       #   uses: softprops/action-gh-release@v2

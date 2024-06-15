@@ -20,7 +20,7 @@ case $ARCH in
 esac
 
 mkdir -p "$BUILD_DIR"
-cd $GITHUB_WORKSPACE/flac
+cd $GITHUB_WORKSPACE/$PKG_NAME
 
 get_sources() {
   SOURCES_URL=http://downloads.xiph.org/releases/
@@ -46,8 +46,8 @@ get_sources libogg
   make -j$(nproc) install || exit 1 )
 
 # build FLAC
-get_sources flac
-( cd flac-*/
+get_sources $PKG_NAME
+( cd $PKG_NAME-*/
   autoreconf -fi && \
   sed -e 's/@LDFLAGS@/@LDFLAGS@ -all-static/' -i Makefile.in
   LDFLAGS="-Wl,-static -static-libgcc -no-pie" \
@@ -63,6 +63,7 @@ get_sources flac
     --with-ogg="$BUILD_DIR" && \
   make -j$(nproc) install-strip DESTDIR=$GITHUB_WORKSPACE/AppDir || exit 1 )
 
-tar -C $GITHUB_WORKSPACE/AppDir/usr/bin -cJvf $GITHUB_WORKSPACE/flac-$PLATFORM.tar.xz .
+PKG_VERSION=$($GITHUB_WORKSPACE/AppDir/usr/bin/$PKG_NAME -v | awk '{print $2}')
+tar -C $GITHUB_WORKSPACE/AppDir/usr/bin -cJvf $GITHUB_WORKSPACE/$PKG_NAME-$PKG_VERSION-$PLATFORM.tar.xz .
 
 ccache --show-stats
