@@ -37,10 +37,6 @@ get_sources_github 'xiph/ogg'
     -DCMAKE_INSTALL_PREFIX=$BUILD_DIR \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_LIBDIR=lib \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++ \
-    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DBUILD_SHARED_LIBS=OFF \
     -DINSTALL_DOCS=OFF && \
   cmake --build build -j --target install/strip || exit 1 )
@@ -52,10 +48,6 @@ get_sources_github 'xiph/flac'
   cmake -B build -S . \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_COMPILER=clang \
-    -DCMAKE_CXX_COMPILER=clang++ \
-    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc" \
     -DBUILD_CXXLIBS=OFF \
     -DBUILD_EXAMPLES=OFF \
