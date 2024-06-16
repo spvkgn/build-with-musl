@@ -14,13 +14,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          arch: [x86_64, x86, aarch64, armhf]
-          # arch: [x86_64]
+          # arch: [x86_64, x86, aarch64, armhf]
+          arch: [x86_64]
           os: [ubuntu-latest]
           branch: [latest-stable]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-${{ github.workflow }}-${{ matrix.arch }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ github.workflow }}-${{ matrix.arch }}-
 
       - name: Set up Alpine Linux for ${{ matrix.arch }}
         uses: jirutka/setup-alpine@v1
@@ -28,7 +36,7 @@ jobs:
           arch: ${{ matrix.arch }}
           branch: ${{ matrix.branch }}
           packages: >
-            bash build-base cmake coreutils findutils gawk git grep tar xz
+            bash build-base ccache cmake clang lld llvm coreutils findutils gawk git grep tar xz
           shell-name: alpine.sh
 
       - name: Build ${{ github.workflow }} inside chroot
@@ -48,7 +56,8 @@ jobs:
           path: ./**/${{ github.workflow }}*.tar.*
 
   release:
-    needs: [build]
+    if: false
+    needs: build
     permissions:
       contents: write
     runs-on: ubuntu-latest
