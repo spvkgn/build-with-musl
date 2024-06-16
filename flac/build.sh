@@ -35,7 +35,7 @@ get_sources_github 'xiph/ogg'
   mkdir -p build
   cmake -B build -S . \
     -DCMAKE_INSTALL_PREFIX=$BUILD_DIR \
-    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_BUILD_TYPE=MinSizeRel \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DBUILD_SHARED_LIBS=OFF \
     -DINSTALL_DOCS=OFF && \
