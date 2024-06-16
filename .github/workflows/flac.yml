@@ -14,8 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-          # arch: [x86_64, x86, aarch64, armhf]
-          arch: [x86_64, x86]
+          arch: [x86_64, x86, aarch64, armhf]
           os: [ubuntu-latest]
           branch: [latest-stable]
     steps:
@@ -36,8 +35,8 @@ jobs:
           arch: ${{ matrix.arch }}
           branch: ${{ matrix.branch }}
           packages: >
-            bash build-base ccache clang lld llvm coreutils findutils gawk git grep tar xz
-            autoconf automake libtool pkgconf gettext jq libarchive-tools wget
+            bash build-base ccache cmake clang lld llvm coreutils findutils gawk git grep tar xz
+            pkgconf jq libarchive-tools wget
           shell-name: alpine.sh
 
       - name: Build Flac inside chroot

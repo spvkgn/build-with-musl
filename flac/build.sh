@@ -3,9 +3,6 @@ set -eo pipefail
 
 BUILD_DIR=$GITHUB_WORKSPACE/build
 
-# export CC="ccache gcc"
-# export LD="ccache ld"
-# export AR="ccache ar"
 export CC="ccache clang"
 export LD="ccache ld.lld"
 export AR="ccache llvm-ar"
@@ -35,30 +32,37 @@ get_sources_github() {
 # build libogg
 get_sources_github 'xiph/ogg'
 ( cd libogg-*/
-  autoreconf -fi && \
-  ./configure \
-    --prefix=$BUILD_DIR \
-    --disable-shared --enable-static \
-    --disable-dependency-tracking && \
-  make -j$(nproc) install || exit 1 )
+  mkdir -p build
+  cmake -B build -S . \
+    -DCMAKE_INSTALL_PREFIX=$BUILD_DIR \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DINSTALL_DOCS=OFF && \
+  cmake --build build -j --target install/strip || exit 1 )
 
 # build FLAC
 get_sources_github 'xiph/flac'
 ( cd $PKG_NAME-*/
-  autoreconf -fi && \
-  sed -e 's/@LDFLAGS@/@LDFLAGS@ -all-static/' -i Makefile.in
-  LDFLAGS="-Wl,-static -static-libgcc -no-pie" \
-  ./configure \
-    --prefix=/usr \
-    --disable-shared --disable-static \
-    --disable-dependency-tracking \
-    --disable-debug \
-    --disable-oggtest \
-    --disable-examples \
-    --disable-cpplibs \
-    --disable-doxygen-docs \
-    --with-ogg=$BUILD_DIR && \
-  make -j$(nproc) install-strip DESTDIR=$GITHUB_WORKSPACE/AppDir || exit 1 )
+  mkdir -p build
+  cmake -B build -S . \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc" \
+    -DBUILD_CXXLIBS=OFF \
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_DOCS=OFF && \
+  cmake --build build -j --target install/strip -- DESTDIR=$GITHUB_WORKSPACE/AppDir || exit 1 )
+    # -DNDEBUG=ON && \
 
 PKG_VERSION=$($GITHUB_WORKSPACE/AppDir/usr/bin/$PKG_NAME -v | awk '{print $2}')
 tar -C $GITHUB_WORKSPACE/AppDir/usr/bin -cJvf $GITHUB_WORKSPACE/$PKG_NAME-$PKG_VERSION-$PLATFORM.tar.xz .
