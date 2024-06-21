@@ -30,9 +30,11 @@ get_sources_github() {
 }
 
 # build FDK AAC library
-git clone https://github.com/mstorsjo/fdk-aac.git && \
-( cd fdk-aac
-  git tag | sort -V | tail -1 | xargs git checkout && \
+# git clone https://github.com/mstorsjo/fdk-aac.git && \
+# ( cd fdk-aac
+#   git tag | sort -V | tail -1 | xargs git checkout && \
+git clone https://gitlab.freedesktop.org/wtaymans/fdk-aac-stripped.git
+( cd fdk-aac-stripped
   mkdir -p build && \
   cmake -S . -B build \
     -DCMAKE_BUILD_TYPE=Release \
